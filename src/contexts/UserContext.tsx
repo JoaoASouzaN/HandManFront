@@ -6,6 +6,7 @@ import { URLAPI } from '../constants/ApiUrl';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'react-toastify';
 
+type TipoUsuario = 'consumidor' | 'prestador' | null;
 
 type UserContextType = {
     isLoggedIn: boolean;
@@ -25,7 +26,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const token = useGetToken();
     
     const [status,setStatus] = useState("")
-
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [imagemPerfil, setImagemPerfil] = useState<string>(''); // Apenas a URL da imagem
