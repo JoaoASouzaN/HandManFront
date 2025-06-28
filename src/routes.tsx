@@ -11,8 +11,6 @@ import { SobreSceen } from "./screens/SobreSceen";
 import { Fornecedor } from "./screens/Fornecedor";
 import { PerfilScreen } from "./screens/perfil/PerfilScreen";
 
-
-
 import { LoginFornecedorScreen } from "./screens/login/LoginFornecedorScreen";
 import { CadastroScreen } from "./screens/cadastro/CadastroScreen";
 import { CadastroFornecedorScreen } from "./screens/cadastro/CadastroFornecedorScreen";
@@ -22,7 +20,9 @@ import { ConfirmacaoPagamento } from "./screens/pagamento/ConfirmacaoPagamento";
 import { AgendamentoScreen } from "./screens/agendamento/AgendamentoScreen";
 import { ConfirmacaoAgendamento } from "./screens/agendamento/ConfirmacaoAgendamento";
 import { ExibirAgenda } from "./screens/ExibirAgenda";
-
+import { LeilaoDetalhesScreen } from "./screens/LeilaoDetalhesScreen";
+import { CriarLeilaoScreen } from "./screens/CriarLeilaoScreen";
+import { MeusLeiloesScreen } from "./screens/MeusLeiloesScreen";
 
 export const Router = () =>{
     return(
@@ -44,6 +44,9 @@ export const Router = () =>{
                 <Route path="/confirmaco-pagamento/:idServico" element={<ConfirmacaoPagamento/>}/>
                 <Route path="/confirmacao-agendamento" element={<ConfirmacaoAgendamento />} />
                 <Route path="/exibirAgenda/:id" element={<ExibirAgenda/>}/>
+                <Route path="/leilao/:id" element={<LeilaoDetalhesScreen />} />
+                <Route path="/criar-leilao" element={<CriarLeilaoScreen />} />
+                <Route path="/meus-leiloes" element={<MeusLeiloesScreen />} />
                 <Route path="*" element={<PaginaErro/>}/>
             </Routes>
     )

@@ -1,25 +1,65 @@
-import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { URLAPI } from '../../constants/ApiUrl';
-import { FormularioLance } from './FormularioLance';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { URLAPI } from "../../constants/ApiUrl";
+import { FormularioLance } from "./FormularioLance";
+import { useGetToken } from "../../hooks/useGetToken";
+
+interface Leilao {
+  id_leilao: string;
+  titulo: string;
+  descricao: string;
+  data_limite: string;
+  categoria: string;
+  imagem?: string;
+}
 
 export const LeilaoDetalhes = () => {
-  const { id } = useParams();
-  const [leilao, setLeilao] = useState<any>(null);
+  const { idLeilao } = useParams();
+  const [leilao, setLeilao] = useState<Leilao | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const token = useGetToken();
+
+  const buscarLeilao = async () => {
+    try {
+      const response = await axios.get(`${URLAPI}/leilao/${idLeilao}`);
+      setLeilao(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar leilão:', error);
+    } finally {
+      setCarregando(false);
+    }
+  };
 
   useEffect(() => {
-    axios.get(`${URLAPI}/leiloes/${id}`).then((res) => setLeilao(res.data));
-  }, [id]);
+    if (idLeilao) buscarLeilao();
+  }, [idLeilao]);
 
-  if (!leilao) return <p>Carregando detalhes...</p>;
+  if (carregando) return <p>Carregando detalhes do leilão...</p>;
+
+  if (!leilao) return <p>Leilão não encontrado.</p>;
+
+  const dataLimite = new Date(leilao.data_limite).toLocaleString();
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <img src={leilao.imagem} alt={leilao.titulo} className="w-full h-64 object-cover rounded mb-4" />
-      <h1 className="text-2xl font-bold mb-2">{leilao.titulo}</h1>
-      <p className="mb-4 text-gray-700">{leilao.descricao}</p>
-      <FormularioLance leilaoId={leilao.id} />
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-4 text-orange-800">{leilao.titulo}</h1>
+
+      {leilao.imagem && (
+        <img
+          src={leilao.imagem}
+          alt={leilao.titulo}
+          className="w-full max-h-[400px] object-cover rounded mb-6"
+        />
+      )}
+
+      <p className="text-gray-600 mb-4"><strong>Categoria:</strong> {leilao.categoria}</p>
+      <p className="text-gray-600 mb-4"><strong>Descrição:</strong> {leilao.descricao}</p>
+      <p className="text-gray-600 mb-4"><strong>Data limite:</strong> {dataLimite}</p>
+
+      {token?.role === 'prestador' && (
+        <FormularioLance idLeilao={leilao.id_leilao} />
+      )}
     </div>
   );
 };

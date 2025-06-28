@@ -1,38 +1,47 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { URLAPI } from '../../constants/ApiUrl';
+import { useState } from "react";
+import axios from "axios";
+import { URLAPI } from "../../constants/ApiUrl";
+import { useGetToken } from "../../hooks/useGetToken";
+import { toast } from "react-toastify";
 
 interface Props {
-  leilaoId: string;
+  idLeilao: string;
 }
 
-export const FormularioLance = ({ leilaoId }: Props) => {
+export const FormularioLance = ({ idLeilao }: Props) => {
   const [valor, setValor] = useState('');
-  const [mensagem, setMensagem] = useState('');
+  const token = useGetToken();
 
   const enviarLance = async () => {
     try {
-      await axios.post(`${URLAPI}/leiloes/${leilaoId}/lance`, { valor });
-      setMensagem('Lance enviado com sucesso!');
+      await axios.post(`${URLAPI}/leilao/${idLeilao}/lance`, {
+        valor: Number(valor),
+        id_usuario: token?.id,
+      });
+
+      toast.success('Lance enviado com sucesso!');
       setValor('');
     } catch (error) {
-      setMensagem('Erro ao enviar lance.');
+      console.error('Erro ao enviar lance:', error);
+      toast.error('Erro ao enviar o lance.');
     }
   };
 
   return (
-    <div className="mt-6">
-      <label className="block mb-2 font-semibold">Valor do lance:</label>
+    <div className="mt-4 flex flex-col items-start gap-3">
       <input
         type="number"
+        placeholder="Digite seu lance (R$)"
+        className="border border-gray-300 p-2 rounded w-64"
         value={valor}
         onChange={(e) => setValor(e.target.value)}
-        className="border p-2 rounded w-full"
       />
-      <button onClick={enviarLance} className="mt-3 bg-green-600 text-white px-4 py-2 rounded">
+      <button
+        onClick={enviarLance}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
         Enviar Lance
       </button>
-      {mensagem && <p className="mt-2 text-sm text-gray-700">{mensagem}</p>}
     </div>
   );
 };
