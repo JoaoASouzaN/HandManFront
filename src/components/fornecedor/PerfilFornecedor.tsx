@@ -4,6 +4,7 @@ import imagemPefilDefault from '../../assets/perfil.png';
 import { useNavigate } from "react-router-dom";
 import { useGetToken } from "../../hooks/useGetToken";
 import { toast } from "react-toastify";
+import { ProfileImage } from "../ProfileImage";
 
 interface FornecedorProps {
   id: string
@@ -17,46 +18,60 @@ interface FornecedorProps {
   categoria_servico: string[];
   sobre: string;
 }
-export const PerfilFornecedor = ({ id, local, nome, media_avaliacoes, descricao, valor, imagemPerfil, imagensServicos, categoria_servico, sobre }: FornecedorProps) => {
 
-  const images = imagensServicos.map((imagem) => ({
-    original: imagem,
-    thumbnail: imagem,
-  }));
-  
+export const PerfilFornecedor = ({
+  id,
+  nome,
+  media_avaliacoes,
+  descricao,
+  valor,
+  imagemPerfil,
+  local,
+  imagensServicos,
+  categoria_servico,
+  sobre
+}: FornecedorProps) => {
+  const navigate = useNavigate();
+  const token = useGetToken();
+
   const formatarAvaliacao = (avaliacao: string) => {
-    const numero = Number(avaliacao);
-    return numero % 1 === 0 ? numero.toFixed(0) : numero.toFixed(1);
+    const num = parseFloat(avaliacao);
+    return num.toFixed(1);
   };
 
-  const token = useGetToken()
-
-  const navegarAgendamento = () => {
-    if (!token) {
-      return toast.error("Crie um conta para fazer um serviço");
+  const handleAgendar = () => {
+    if (!token?.id) {
+      toast.error("Você precisa estar logado para agendar um serviço");
+      navigate("/login");
+      return;
     }
-    if (token.role === 'Fornecedor') {
-      return toast.error("Entre como usuário para agendar serviços");
-    }
-    navigate(`/pagamento/${id}`)
-  }
+    navigate(`/pagamento/${id}`);
+  };
 
-  const categorias = categoria_servico.map((fornecedor) => (
-    <button className="border border-orange-400 rounded px-3 py-1 text-sm hover:bg-orange-100" key={fornecedor}>
-      {fornecedor}
-    </button>
+  const images = imagensServicos.map((img) => ({
+    original: img,
+    thumbnail: img,
+  }));
+
+  const categorias = categoria_servico.map((categoria, index) => (
+    <span
+      key={index}
+      className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"
+    >
+      {categoria}
+    </span>
   ));
-  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col items-center p-6">
       <div className="flex flex-col md:flex-row justify-around w-full  bg-white rounded-lg  p-6 gap-6">
         {/* Perfil do profissional */}
         <div className="flex items-center gap-4">
-          <img
-            className="w-32 h-32 rounded-full object-cover"
+          <ProfileImage
             src={imagemPerfil || imagemPefilDefault}
             alt="Imagem do Fornecedor"
+            className="w-32 h-32 object-cover"
+            size="lg"
           />
           <div>
             <h2 className="text-3xl font-semibold text-[#AD5700]">{nome}</h2>
@@ -77,37 +92,21 @@ export const PerfilFornecedor = ({ id, local, nome, media_avaliacoes, descricao,
         </div>
 
         {/* Card lateral com valor */}
-        <div className="flex flex-col border border-[#AD5700] rounded-lg p-6 w-72 shadow-md">
-          <div className="flex items-center gap-3 mb-3">
-            <img
-              className="w-12 h-12 rounded-full object-cover"
-              src={imagemPerfil || imagemPefilDefault}
-              alt="Imagem Ilustrativa"
-            />
-            <h2 className="font-semibold text-[#AD5700] text-lg">{nome}</h2>
-          </div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-2xl font-bold text-gray-900">
-              R$ {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(valor))}
-            </p>
-            <button className="flex items-center text-gray-600 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition-colors">
-              <svg className="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-              </svg>
-              Salvar
+        <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-orange-700">R$ {valor}</p>
+            <p className="text-gray-600 mb-4">por hora</p>
+            <button
+              onClick={handleAgendar}
+              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold"
+            >
+              Agendar Serviço
             </button>
           </div>
-          <p className="text-green-600 text-xs mb-2">Cadastre e ganhe 15% de Desconto</p>
-          <p className="text-xs text-gray-500 mb-1">* Valor cobrado por hora</p>
-          <p className="text-xs text-gray-500 mb-4">Finalização em 2 dias</p>
-
-          <button onClick={navegarAgendamento} className="bg-green-500 text-white text-base px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200">
-            Me contate
-          </button>
         </div>
       </div>
 
-      {/* Serviços oferecidos */}
+      {/* Categorias */}
       <div className="mt-8 w-full max-w-5xl bg-orange-50 rounded-lg p-6 shadow-lg">
         <h3 className="text-orange-700 font-semibold mb-3">
           Este serviço é oferecido por um profissional.

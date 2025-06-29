@@ -4,6 +4,7 @@ import { URLAPI } from "../../constants/ApiUrl";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LeilaoImage } from "./LeilaoImage";
 
 interface Leilao {
     id: string;
@@ -66,8 +67,8 @@ export const LeilaoCarousel = () => {
                         className="min-w-[280px] max-w-[300px] bg-white rounded-xl shadow-md p-4 flex-shrink-0 cursor-pointer hover:shadow-lg transition"
                         onClick={() => navigate(`/leilao/${leilao.id}`)}
                     >
-                        <img
-                            src={leilao.imagemCapa || "https://via.placeholder.com/300x180.png?text=Sem+Imagem"}
+                        <LeilaoImage
+                            src={leilao.imagemCapa}
                             alt={leilao.titulo}
                             className="w-full h-40 object-cover rounded-lg mb-3"
                         />

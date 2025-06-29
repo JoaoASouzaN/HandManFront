@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { isUserLoggedIn } from '../services/isUserLoggedIn';
 import { useGetToken } from '../hooks/useGetToken';
 import { Modal } from './Modal';
@@ -7,6 +7,8 @@ import imagemPerfilProvisoria from '../assets/perfil.png';
 import axios from 'axios';
 import { URLAPI } from '../constants/ApiUrl';
 import Chat from './Chat';
+import { ProfileImage } from './ProfileImage';
+
 
 type typeUsuario = {
   picture: string;
@@ -107,6 +109,10 @@ const Header = () => {
     navigate('/');
   }
 
+  const navegarLeiloes = () => {
+    navigate('/leiloes');
+  }
+
   const toggleModal = () => {
     setIsModalOpen((prev) => !prev); // alterna entre true/false
   };
@@ -122,6 +128,7 @@ const Header = () => {
             <a onClick={navegarServicos} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Serviços</a>
             <a onClick={navegarSobreNos} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Sobre nós</a>
             <a onClick={navegarAjuda} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Ajuda</a>
+            <a onClick={navegarLeiloes} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Leilões</a>
           </nav>
 
           {isLoggedIn ? (
@@ -148,14 +155,22 @@ const Header = () => {
                   <p className='text-sm font-medium'>Seja um Profissional</p>
                 </div>
               )}
+              {token?.role !== 'Fornecedor' && (
+                <Link
+                  to="/meus-leiloes"
+                  className="text-orange-700 font-semibold hover:text-orange-900 transition-colors"
+                >
+                  Meus Leilões
+                </Link>
+              )}
               <div className="relative inline-block">
-
                 <div>
-                  <img
-                    onClick={toggleModal}
-                    className="w-12 rounded-full cursor-pointer"
+                  <ProfileImage
                     src={imagem || imagemPerfilProvisoria}
                     alt="imagem-perfil"
+                    className="rounded-full cursor-pointer"
+                    size="md"
+                    onClick={toggleModal}
                   />
                 </div>
 

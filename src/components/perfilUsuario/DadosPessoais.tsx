@@ -2,6 +2,7 @@ import axios from "axios";
 import { useRef, useState } from "react";
 import imagemPerfilProvisoria from '../../assets/perfil.png';
 import { URLAPI } from "../../constants/ApiUrl";
+import { ProfileImage } from "../ProfileImage";
 
 interface DadosPessoaisProps {
     id_usuario: string | undefined;
@@ -56,11 +57,12 @@ export const DadosPessoais = ({ id_usuario, email, nome, telefone, picture }: Da
             <h2 className="text-2xl font-semibold mb-6 text-gray-800">Informações Pessoais</h2>
 
             <div className="flex flex-col items-start gap-4">
-                <img
+                <ProfileImage
                     src={imagemPerfil || imagemPerfilProvisoria}
                     alt="Foto de perfil"
+                    className="w-28 h-28 object-cover border-2 border-gray-300 hover:opacity-90 transition"
+                    size="lg"
                     onClick={handleImagemClick}
-                    className="w-28 h-28 rounded-full object-cover cursor-pointer border-2 border-gray-300 hover:opacity-90 transition"
                 />
 
                 <input

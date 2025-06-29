@@ -23,6 +23,7 @@ import { ExibirAgenda } from "./screens/ExibirAgenda";
 import { LeilaoDetalhesScreen } from "./screens/LeilaoDetalhesScreen";
 import { CriarLeilaoScreen } from "./screens/CriarLeilaoScreen";
 import { MeusLeiloesScreen } from "./screens/MeusLeiloesScreen";
+import { LeiloesScreen } from "./screens/LeiloesScreen";
 
 export const Router = () =>{
     return(
@@ -44,6 +45,7 @@ export const Router = () =>{
                 <Route path="/confirmaco-pagamento/:idServico" element={<ConfirmacaoPagamento/>}/>
                 <Route path="/confirmacao-agendamento" element={<ConfirmacaoAgendamento />} />
                 <Route path="/exibirAgenda/:id" element={<ExibirAgenda/>}/>
+                <Route path="/leiloes" element={<LeiloesScreen />} />
                 <Route path="/leilao/:id" element={<LeilaoDetalhesScreen />} />
                 <Route path="/criar-leilao" element={<CriarLeilaoScreen />} />
                 <Route path="/meus-leiloes" element={<MeusLeiloesScreen />} />

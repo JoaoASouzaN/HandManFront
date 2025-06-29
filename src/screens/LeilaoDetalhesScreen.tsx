@@ -33,7 +33,7 @@ export const LeilaoDetalhesScreen = () => {
 
     const buscarLeilao = async () => {
         try {
-            const response = await axios.get(`${URLAPI}/leilao/${id}`);
+            const response = await axios.get(`${URLAPI}/leiloes/${id}`);
             setLeilao(response.data);
         } catch (error) {
             console.error(error);
@@ -58,6 +58,9 @@ export const LeilaoDetalhesScreen = () => {
 
     return (
         <div className="max-w-3xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6">
+            <div className="mb-4">
+                <a href="/leiloes" className="inline-block px-4 py-2 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 font-semibold transition mb-2">Ver todos os leilões</a>
+            </div>
             <h1 className="text-2xl font-bold text-orange-700 mb-2">{leilao.titulo}</h1>
             <p className="text-gray-700 mb-4">{leilao.descricao}</p>
             <p className="text-sm text-gray-500 mb-4">Categoria: {leilao.categoria}</p>
@@ -83,7 +86,10 @@ export const LeilaoDetalhesScreen = () => {
             )}
 
             {ehDono && (
-                <p className="mt-6 text-green-600">Você é o criador deste leilão.</p>
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 font-medium">Você é o criador deste leilão.</p>
+                    <p className="text-green-600 text-sm mt-1">Aguarde os lances dos outros usuários.</p>
+                </div>
             )}
         </div>
     );

@@ -12,35 +12,83 @@ export const CriarLeilaoScreen = () => {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [valorInicial, setValorInicial] = useState("");
   const [prazo, setPrazo] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [erros, setErros] = useState({
+    titulo: false,
+    descricao: false,
+    categoria: false,
+    valorInicial: false,
+    prazo: false,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErros({ titulo: false, descricao: false, categoria: false, valorInicial: false, prazo: false });
 
-    if (!titulo || !descricao || !categoria || !prazo) {
-      toast.error("Preencha todos os campos obrigatórios.");
-      return;
+    let hasError = false;
+
+    if (!titulo.trim() || titulo.length < 5 || titulo.length > 100) {
+      toast.warning("O título deve ter entre 5 e 100 caracteres.");
+      setErros(prev => ({ ...prev, titulo: true }));
+      hasError = true;
     }
 
-    if (token?.role !== "Consumidor") {
-      toast.error("Apenas consumidores podem criar leilões.");
-      return;
+    if (!descricao.trim() || descricao.length < 20) {
+      toast.warning("A descrição deve ter pelo menos 20 caracteres.");
+      setErros(prev => ({ ...prev, descricao: true }));
+      hasError = true;
     }
 
+    if (!categoria.trim()) {
+      toast.warning("Escolha uma categoria.");
+      setErros(prev => ({ ...prev, categoria: true }));
+      hasError = true;
+    }
+
+    const valor = Number(valorInicial);
+    if (isNaN(valor) || valor <= 0) {
+      toast.warning("Informe um valor inicial válido (maior que zero).");
+      setErros(prev => ({ ...prev, valorInicial: true }));
+      hasError = true;
+    }
+
+    if (!prazo) {
+      toast.warning("Informe o prazo final do leilão.");
+      setErros(prev => ({ ...prev, prazo: true }));
+      hasError = true;
+    } else {
+      const prazoDate = new Date(prazo);
+      const agora = new Date();
+      if (prazoDate <= agora) {
+        toast.warning("O prazo deve ser uma data futura.");
+        setErros(prev => ({ ...prev, prazo: true }));
+        hasError = true;
+      }
+    }
+
+    if (hasError) return;
+
+    setIsLoading(true);
     try {
-      await axios.post(`${URLAPI}/leilao`, {
+      await axios.post(`${URLAPI}/leiloes`, {
+        id_usuario: token?.id,
         titulo,
         descricao,
         categoria,
-        prazo,
-        id_usuario: token.id
+        valor_inicial: valor,
+        prazo
       });
 
       toast.success("Leilão criado com sucesso!");
-      navigate("/");
+      navigate("/meus-leiloes");
     } catch (error) {
-      toast.error("Erro ao criar leilão.");
+      toast.error("Erro ao criar o leilão.");
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,20 +102,20 @@ export const CriarLeilaoScreen = () => {
           placeholder="Título do Leilão"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
-          className="border border-gray-300 p-3 rounded"
+          className={`border p-3 rounded ${erros.titulo ? 'border-red-500' : 'border-gray-300'}`}
         />
 
         <textarea
           placeholder="Descrição"
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
-          className="border border-gray-300 p-3 rounded min-h-[100px]"
+          className={`border p-3 rounded min-h-[100px] ${erros.descricao ? 'border-red-500' : 'border-gray-300'}`}
         />
 
         <select
           value={categoria}
           onChange={(e) => setCategoria(e.target.value)}
-          className="border border-gray-300 p-3 rounded"
+          className={`border p-3 rounded ${erros.categoria ? 'border-red-500' : 'border-gray-300'}`}
         >
           <option value="">Selecione a categoria</option>
           <option value="Mudança">Mudança</option>
@@ -79,17 +127,26 @@ export const CriarLeilaoScreen = () => {
         </select>
 
         <input
+          type="number"
+          placeholder="Valor Inicial (R$)"
+          value={valorInicial}
+          onChange={(e) => setValorInicial(e.target.value)}
+          className={`border p-3 rounded ${erros.valorInicial ? 'border-red-500' : 'border-gray-300'}`}
+        />
+
+        <input
           type="datetime-local"
           value={prazo}
           onChange={(e) => setPrazo(e.target.value)}
-          className="border border-gray-300 p-3 rounded"
+          className={`border p-3 rounded ${erros.prazo ? 'border-red-500' : 'border-gray-300'}`}
         />
 
         <button
           type="submit"
-          className="bg-orange-700 text-white py-3 rounded hover:bg-orange-800 transition"
+          disabled={isLoading}
+          className={`text-white py-3 rounded transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-700 hover:bg-orange-800'}`}
         >
-          Criar Leilão
+          {isLoading ? "Criando..." : "Criar Leilão"}
         </button>
       </form>
     </div>
