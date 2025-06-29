@@ -11,6 +11,7 @@ interface Props {
 
 export const FormularioLance = ({ idLeilao }: Props) => {
   const [valor, setValor] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const token = useGetToken();
   const navigate = useNavigate();
 
@@ -26,22 +27,51 @@ export const FormularioLance = ({ idLeilao }: Props) => {
       return;
     }
 
+    setEnviando(true);
+
     try {
-      await axios.post(`${URLAPI}/leiloes/${idLeilao}/lance`, {
-        valor: Number(valor),
-        id_usuario: token.id,
-      });
+      const response = await axios.post(
+        `${URLAPI}/leiloes/${idLeilao}/lance`,
+        {
+          valor: Number(valor),
+          usuarioId: token.id,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
 
       toast.success('Lance enviado com sucesso!');
       setValor('');
-    } catch (error) {
+      
+      // Recarregar a página para mostrar o novo lance
+      window.location.reload();
+    } catch (error: any) {
       console.error('Erro ao enviar lance:', error);
-      toast.error('Erro ao enviar o lance.');
+      
+      if (error.response?.status === 403) {
+        toast.error('Apenas fornecedores podem dar lances em leilões. Você precisa ser um fornecedor para participar.');
+      } else if (error.response?.status === 400) {
+        toast.error(error.response.data.erro || 'Erro ao enviar o lance.');
+      } else if (error.response?.status === 401) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        navigate('/login');
+      } else {
+        toast.error('Erro ao enviar o lance. Tente novamente.');
+      }
+    } finally {
+      setEnviando(false);
     }
   };
 
   const irParaLogin = () => {
     navigate('/login');
+  };
+
+  const irParaCadastroFornecedor = () => {
+    navigate('/cadastro-fornecedor');
   };
 
   // Se não estiver logado, mostrar botão para fazer login
@@ -54,6 +84,22 @@ export const FormularioLance = ({ idLeilao }: Props) => {
           className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition-colors"
         >
           Fazer Login
+        </button>
+      </div>
+    );
+  }
+
+  // Se não for fornecedor, mostrar mensagem específica
+  if (token.role !== 'Fornecedor') {
+    return (
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-blue-800 mb-3">Apenas fornecedores podem dar lances em leilões.</p>
+        <p className="text-blue-600 text-sm mb-3">Você precisa ser um fornecedor para participar de leilões.</p>
+        <button
+          onClick={irParaCadastroFornecedor}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          Seja um Fornecedor
         </button>
       </div>
     );
@@ -74,14 +120,15 @@ export const FormularioLance = ({ idLeilao }: Props) => {
           onChange={(e) => setValor(e.target.value)}
           min="0"
           step="0.01"
+          disabled={enviando}
         />
       </div>
       <button
         onClick={enviarLance}
-        disabled={!valor || Number(valor) <= 0}
+        disabled={!valor || Number(valor) <= 0 || enviando}
         className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
       >
-        Enviar Lance
+        {enviando ? 'Enviando...' : 'Enviar Lance'}
       </button>
     </div>
   );
