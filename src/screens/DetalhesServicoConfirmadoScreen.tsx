@@ -9,6 +9,7 @@ import { URLAPI } from '../constants/ApiUrl';
 
 export const DetalhesServicoConfirmadoScreen = () => {
     const { id } = useParams<{ id: string }>();
+    console.log('[DEBUG DetalhesServico] Componente montado. id:', id);
 
     
     
@@ -16,60 +17,33 @@ export const DetalhesServicoConfirmadoScreen = () => {
     
     const procurarServico = async () => {
         try {
+            console.log('[DEBUG DetalhesServico] Buscando serviço com id:', id);
             const response = await axios.get(`${URLAPI}/servicos/${id}`);
             setService(response.data);
-            console.log(response.data);
+            console.log('[DEBUG DetalhesServico] Resposta:', response.data);
         } catch (error) {
-            console.log(error);
+            console.log('[DEBUG DetalhesServico] Erro ao buscar serviço:', error);
         }
     }
 
     const handlePagar = async () => {
         try {
-            const res = await fetch(`${URLAPI}/pagamento/criar-preferencia`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    title: 'Agendamento de Serviço',
-                    servicoId: id,
-                    quantity: 1,
-                    unit_price: /*service?.valor*/  service?.valor || 1,
-                    payer: {
-                        name: service?.fornecedor?.nome || '',
-                        email: service?.fornecedor?.email || '',
-                        identification: {
-                            type: 'CPF',
-                            number: /*service?.fornecedor?.cpf*/  '',
-                        },
-                    },
-                    description: service?.descricao || 'Serviço Handyman',
-                    external_reference: JSON.stringify({
-                        endereco: /*service?.endereco*/  '',
-                        data: service?.data || '',
-                        hora: service?.horario || '',
-                        telefone: /*service?.telefone*/  ''
-                    })
-                }),
+            // Atualiza o status do serviço para 'pago'
+            await axios.put(`${URLAPI}/servicos`, {
+                id_servico: id,
+                status: 'pago'
             });
-
-            if (!res.ok) {
-                throw new Error('Erro ao processar pagamento');
-            }
-
-            const data = await res.json();
-            window.location.href = data.init_point;
+            alert('Pagamento realizado com sucesso!');
+            // Redireciona para a home ou próxima etapa
+            window.location.href = '/meus-servicos';
         } catch (error) {
-            console.error('Erro ao processar pagamento:', error);
             alert('Erro ao processar pagamento. Tente novamente.');
         }
     };
 
     useEffect(() => {
-        procurarServico();
-    }, [])
+        if (id) procurarServico();
+    }, [id])
 
     if (!service) {
         return <div className="text-center py-10">Detalhes do serviço não disponíveis.</div>;

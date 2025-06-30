@@ -107,6 +107,9 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
 
     const navigate = useNavigate();
 
+    const [statusFiltro, setStatusFiltro] = useState<string>('todos');
+    const statusOpcoes = ['todos', 'pendente', 'confirmado', 'em andamento', 'concluido', 'cancelado', 'Aguardando pagamento'];
+
     console.log('=== DEBUG AGENDA COMPONENT ===');
     console.log('Token disponível:', !!token);
     console.log('Token ID:', token?.id);
@@ -500,9 +503,22 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                 </div>
             </div>
 
+            <div className="mb-4 flex flex-wrap gap-2 items-center">
+                <label className="font-semibold">Filtrar por status:</label>
+                <select
+                    value={statusFiltro}
+                    onChange={e => setStatusFiltro(e.target.value)}
+                    className="border rounded px-2 py-1"
+                >
+                    {statusOpcoes.map(opcao => (
+                        <option key={opcao} value={opcao}>{opcao.charAt(0).toUpperCase() + opcao.slice(1)}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* Lista de Serviços */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {servicosPaginados.length > 0 ? (
+                {(historicoServico?.filter(servico => statusFiltro === 'todos' || servico.status?.toLowerCase() === statusFiltro.toLowerCase()) ?? []).length > 0 ? (
                     servicosPaginados.map((servico, index) => {
                         const statusConfig = getStatusConfig(servico.status);
                         const dataServico = new Date(servico.data);
@@ -766,7 +782,16 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                             </button>
                                         )}
 
-                                        
+                                        {/* Botão de detalhes do serviço - sempre visível */}
+                                        <button
+                                            onClick={() => navigate(`/detalhes-servico-confirmado/${servico.id_servico}`)}
+                                            className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" />
+                                            </svg>
+                                            Detalhes do Serviço
+                                        </button>
                                     </div>
                                 </div>
                             </div>

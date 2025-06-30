@@ -1,11 +1,1 @@
-// export const URLAPI = 'http://localhost:3003'
-// export const URLAPI = 'https://handyman-back-production.up.railway.app'
-export const URLAPI = 'http://localhost:3003'
-
-//URL local
-// export const URLAPI = 'http://localhost:3004'
-
-//https://handyman-back-production.up.railway.app
-
-//URL API
-//export const URLAPI = 'https://handyman-back-production.up.railway.app'
+export const URLAPI = import.meta.env.VITE_API_URL || 'http://localhost:3003';

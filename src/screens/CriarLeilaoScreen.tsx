@@ -77,9 +77,9 @@ export const CriarLeilaoScreen = () => {
         id_usuario: token?.id,
         titulo,
         descricao,
-        categoria,
-        valor_inicial: valor,
-        prazo
+        valorDesejado: valor,
+        detalhes: categoria,
+        prazoLimite: prazo
       });
 
       toast.success("Leilão criado com sucesso!");

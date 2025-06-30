@@ -260,7 +260,7 @@ export const PaginaPrincipal = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap justify-start max-w-8xl mx-auto gap-4">
+                <div className="flex flex-wrap justify-center max-w-8xl mx-auto gap-4">
                     {error && <div className="text-red-500 text-center">{error}</div>}
                     {listarFornecedores}
                 </div>

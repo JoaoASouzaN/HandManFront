@@ -109,7 +109,7 @@ const MeusServicos: React.FC = () => {
 
     const handleVerDetalhes = (servico: Servico) => {
         // Navegar para tela de detalhes do serviço
-        navigate(`/servico/${servico.id_servico}`);
+        navigate(`/detalhes-servico-confirmado/${servico.id_servico}`);
     };
 
     const handleCancelarServico = async (idServico: string) => {

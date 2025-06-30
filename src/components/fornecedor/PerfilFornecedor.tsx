@@ -68,11 +68,10 @@ export const PerfilFornecedor = ({
       <div className="flex flex-col md:flex-row justify-around w-full  bg-white rounded-lg  p-6 gap-6">
         {/* Perfil do profissional */}
         <div className="flex items-center gap-4">
-          <ProfileImage
+          <img
             src={imagemPerfil || imagemPefilDefault}
             alt="Imagem do Fornecedor"
-            className="w-32 h-32 object-cover"
-            size="lg"
+            className="w-48 h-48 object-cover rounded-full border-2 border-[#A75C00]"
           />
           <div>
             <h2 className="text-3xl font-semibold text-[#AD5700]">{nome || 'Nome não disponível'}</h2>

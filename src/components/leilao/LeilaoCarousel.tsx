@@ -57,7 +57,7 @@ export const LeilaoCarousel = () => {
     }
 
     if (leiloes.length === 0) {
-        return <div className="text-center py-8">Nenhum leilão ativo no momento.</div>;
+        return null;
     }
 
     return (

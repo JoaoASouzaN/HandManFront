@@ -68,7 +68,7 @@ const Header = () => {
 
     if (token?.id && !imagem) {
       if (token.role === 'Fornecedor') {
-        procurarImagesmPerfilFornecedor()
+        procurarImagemPerfilFornecedor()
       } else {
         procurarImagemPerfil();
       }
@@ -133,6 +133,9 @@ const Header = () => {
             <a onClick={navegarAjuda} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Ajuda</a>
             <a onClick={navegarLeiloes} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Leilões</a>
             {isLoggedIn && token?.role !== 'Fornecedor' && (
+              <a onClick={() => navigate('/meus-leiloes')} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Meus Leilões</a>
+            )}
+            {isLoggedIn && token?.role !== 'Fornecedor' && (
               <a onClick={navegarMeusServicos} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Meus Serviços</a>
             )}
           </nav>
@@ -160,14 +163,6 @@ const Header = () => {
                 >
                   <p className='text-sm font-medium'>Seja um Profissional</p>
                 </div>
-              )}
-              {token?.role !== 'Fornecedor' && (
-                <Link
-                  to="/meus-leiloes"
-                  className="text-orange-700 font-semibold hover:text-orange-900 transition-colors"
-                >
-                  Meus Leilões
-                </Link>
               )}
               <div className="relative inline-block">
                 <div>

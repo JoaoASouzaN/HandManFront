@@ -21,7 +21,7 @@ export const useStatusNotifications = (
             reconnection: true,
             reconnectionAttempts: 5,
             reconnectionDelay: 1000
-        });sss
+        });
         
         socketRef.current = socket;
 
