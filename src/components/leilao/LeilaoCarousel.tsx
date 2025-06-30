@@ -24,10 +24,13 @@ export const LeilaoCarousel = () => {
     useEffect(() => {
         const buscarLeiloes = async () => {
             try {
+                console.log('Buscando leilões ativos...');
                 const response = await axios.get(`${URLAPI}/leiloes/ativos`);
+                console.log('Leilões ativos recebidos:', response.data);
                 setLeiloes(response.data);
                 setError(null);
             } catch (err) {
+                console.error('Erro ao carregar leilões:', err);
                 setError("Erro ao carregar leilões.");
                 setLeiloes([]);
             } finally {
@@ -65,7 +68,10 @@ export const LeilaoCarousel = () => {
                     <div
                         key={leilao.id}
                         className="min-w-[280px] max-w-[300px] bg-white rounded-xl shadow-md p-4 flex-shrink-0 cursor-pointer hover:shadow-lg transition"
-                        onClick={() => navigate(`/leilao/${leilao.id}`)}
+                        onClick={() => {
+                            console.log('Card clicado, navegando para:', `/leilao/${leilao.id}`);
+                            navigate(`/leilao/${leilao.id}`);
+                        }}
                     >
                         <LeilaoImage
                             src={leilao.imagemCapa}
@@ -75,7 +81,14 @@ export const LeilaoCarousel = () => {
                         <h3 className="text-lg font-semibold text-gray-800 truncate">{leilao.titulo}</h3>
                         <p className="text-sm text-gray-600 line-clamp-2">{leilao.descricao}</p>
                         <p className="text-xs text-gray-500 mt-2">Encerra {tempoRestante(leilao.tempoFinalizacao)}</p>
-                        <button className="mt-3 w-full bg-orange-600 text-white py-1 px-3 rounded hover:bg-orange-700 text-sm">
+                        <button 
+                            className="mt-3 w-full bg-orange-600 text-white py-1 px-3 rounded hover:bg-orange-700 text-sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Botão Saiba mais clicado, navegando para:', `/leilao/${leilao.id}`);
+                                navigate(`/leilao/${leilao.id}`);
+                            }}
+                        >
                             Saiba mais
                         </button>
                     </div>

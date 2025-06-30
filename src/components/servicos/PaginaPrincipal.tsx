@@ -31,7 +31,11 @@ export const PaginaPrincipal = () => {
     const [paginaAtual, setPaginaAtual] = useState(1);
     const itensPorPagina = 8;
 
-    const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>("Controle");
+    const [categoriaSelecionada, setCategoriaSelecionada] = useState<string>("Controle");
+
+    // URLs de fallback para imagens quebradas
+    const imagemLimpezaFallback = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=64&h=64&fit=crop&crop=center";
+    const imagemJardinagemFallback = "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=64&h=64&fit=crop&crop=center";
 
     const mudarCategorias = (categoria: string) => {
         setCategoriaSelecionada(categoria);
@@ -41,7 +45,7 @@ export const PaginaPrincipal = () => {
     const buscarFornecedores = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${URLAPI}/fornecedor/categorias/${categoriaSelecionada}`);
+            const response = await axios.get(`${URLAPI}/fornecedor/categorias/${encodeURIComponent(categoriaSelecionada || "")}`);
 
             setFornecedoresFiltrados(response.data);
             setError(null);
@@ -63,7 +67,7 @@ export const PaginaPrincipal = () => {
 
         setLoading(true);
         try {
-            const response = await axios.get(`${URLAPI}/fornecedor/categorias/${categoriaSelecionada}/busca`, {
+            const response = await axios.get(`${URLAPI}/fornecedor/categorias/${encodeURIComponent(categoriaSelecionada || "")}/busca`, {
                 params: { termo: termoPesquisa }
             });
             setFornecedoresFiltrados(response.data);
@@ -97,11 +101,11 @@ export const PaginaPrincipal = () => {
             key={fornecedor.id_fornecedor}
             imagemFornecedor={fornecedor.imagemIlustrativa || imagem}
             nome={fornecedor.nome}
-            avaliacao={fornecedor.media_avaliacoes}
+            avaliacao={String(fornecedor.media_avaliacoes)}
             descricao={fornecedor.descricao}
             imagemIcone={fornecedor.imagemPerfil || imagem}
             subDescricao={fornecedor.sub_descricao}
-            valor={fornecedor.valor}
+            valor={String(fornecedor.valor)}
         />
     ));
 
@@ -200,7 +204,14 @@ export const PaginaPrincipal = () => {
                                     }`}
                                 onClick={() => mudarCategorias("Limpeza")}
                             >
-                                <img className="w-16 h-16" src={imagemCategoriaLimpeza} alt="imagem limpeza" />
+                                <img 
+                                    className="w-16 h-16" 
+                                    src={imagemCategoriaLimpeza} 
+                                    alt="imagem limpeza"
+                                    onError={(e) => {
+                                        e.currentTarget.src = imagemLimpezaFallback;
+                                    }}
+                                />
                                 <p
                                     className={`mt-2 ${categoriaSelecionada === "Limpeza" ? "border-b-2 border-orange-700 font-semibold" : ""
                                         }`}
@@ -215,7 +226,14 @@ export const PaginaPrincipal = () => {
                                     }`}
                                 onClick={() => mudarCategorias("Jardinagem")}
                             >
-                                <img className="w-16 h-16" src={imagemCategoriaJardinagem} alt="imagem jardinagem" />
+                                <img 
+                                    className="w-16 h-16" 
+                                    src={imagemCategoriaJardinagem} 
+                                    alt="imagem jardinagem"
+                                    onError={(e) => {
+                                        e.currentTarget.src = imagemJardinagemFallback;
+                                    }}
+                                />
                                 <p
                                     className={`mt-2 ${categoriaSelecionada === "Jardinagem" ? "border-b-2 border-orange-700 font-semibold" : ""
                                         }`}
@@ -239,21 +257,6 @@ export const PaginaPrincipal = () => {
                                 </p>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-3 ml-10 mb-5">
-                        <button className="bg-white text-[#AD5700] border-[#A75C00] px-4 py-2 rounded hover:bg-[#AD5700] hover:text-white transition duration-300 w-56 " >
-                            Serviços de Montagem
-                        </button>
-                        <button className="bg-white text-[#AD5700] border-[#A75C00] px-4 py-2 rounded hover:bg-[#AD5700] hover:text-white transition duration-300 w-56" >
-                            Pintura Residencial
-                        </button>
-                        <button className="bg-white text-[#AD5700] border-[#A75C00] px-4 py-2 rounded hover:bg-[#AD5700] hover:text-white transition duration-300 w-56" >
-                            Manutenção Geral
-                        </button>
-                        <button className="bg-white text-[#AD5700] border-[#A75C00] px-4 py-2 rounded hover:bg-[#AD5700] hover:text-white transition duration-300 w-56" >
-                            Reformas e Reparos
-                        </button>
                     </div>
                 </div>
 
@@ -299,11 +302,11 @@ export const PaginaPrincipal = () => {
                                 : 'bg-[#AC5906] text-white hover:bg-[#8B4705]'
                                 }`}
                         >
-                            Próxima
+                            Próximo
                         </button>
                     </div>
                 )}
             </div>
         </>
     );
-}
+};

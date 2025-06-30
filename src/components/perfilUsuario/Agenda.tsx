@@ -56,14 +56,35 @@ const statusOptions = [
 const dataOptions = [
     { value: 'todos', label: 'Todos' },
     { value: 'hoje', label: 'Hoje' },
-    { value: 'semana', label: 'Última Semana' },
-    { value: 'mes', label: 'Último Mês' },
-    { value: 'ano', label: 'Último Ano' }
+    { value: 'amanha', label: 'Amanhã' },
+    { value: 'semana', label: 'Esta Semana' },
+    { value: 'mes', label: 'Este Mês' },
+    { value: 'ano', label: 'Este Ano' }
+];
+
+const urgenciaOptions = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'urgente', label: 'Urgente (hoje/amanhã)' },
+    { value: 'proximo', label: 'Próximos 7 dias' },
+    { value: 'futuro', label: 'Futuro' }
+];
+
+const categoriaOptions = [
+    { value: 'todos', label: 'Todas' },
+    { value: 'Limpeza', label: 'Limpeza' },
+    { value: 'Elétrica', label: 'Elétrica' },
+    { value: 'Encanamento', label: 'Encanamento' },
+    { value: 'Pintura', label: 'Pintura' },
+    { value: 'Mudança', label: 'Mudança' },
+    { value: 'Carpintaria', label: 'Carpintaria' },
+    { value: 'Jardinagem', label: 'Jardinagem' }
 ];
 
 export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps) => {
     const [filtroStatus, setFiltroStatus] = useState('todos');
     const [filtroData, setFiltroData] = useState('todos');
+    const [filtroUrgencia, setFiltroUrgencia] = useState('todos');
+    const [filtroCategoria, setFiltroCategoria] = useState('todos');
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isAvaliacaoOpen, setIsAvaliacaoOpen] = useState(false);
     const [id_servico, setIdServico] = useState("");
@@ -85,6 +106,61 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
     const token = useGetToken();
 
     const navigate = useNavigate();
+
+    console.log('=== DEBUG AGENDA COMPONENT ===');
+    console.log('Token disponível:', !!token);
+    console.log('Token ID:', token?.id);
+    console.log('Historico disponível:', !!historicoServico);
+    console.log('Quantidade de serviços:', historicoServico?.length);
+    console.log('Serviços com status "confirmar valor":', historicoServico?.filter(s => s.status === 'confirmar valor').length);
+
+    useEffect(() => {
+        if (token?.id) {
+            const buscarHistorico = async () => {
+                try {
+                    const response = await axios.get(`${URLAPI}/servicos/usuario/${token.id}`);
+                    setHistorico(response.data);
+                } catch (error) {
+                    console.error("Erro ao buscar histórico:", error);
+                }
+            };
+            buscarHistorico();
+        }
+    }, [token?.id, setHistorico]);
+
+    const handleStatusUpdate = async (update: { id_servico: string; novo_status: string }) => {
+        console.log('handleStatusUpdate chamada com:', update);
+        
+        const data = {
+            id_servico: update.id_servico,
+            status: update.novo_status
+        }
+
+        console.log('Enviando requisição PUT para:', `${URLAPI}/servicos`);
+        console.log('Dados enviados:', data);
+        
+        try {
+            const response = await axios.put(`${URLAPI}/servicos`, data);
+            console.log('Resposta do servidor:', response.data);
+            
+            // Atualizar o estado local
+            if (setHistorico && historicoServico) {
+                const historicoAtualizado = historicoServico.map(servico => 
+                    servico.id_servico === update.id_servico 
+                        ? { ...servico, status: update.novo_status }
+                        : servico
+                );
+                setHistorico(historicoAtualizado);
+                console.log('Estado local atualizado');
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
+        }
+    };
+
+    const { emitirMudancaStatus } = useStatusNotifications(handleStatusUpdate, token?.id);
+    
+    console.log('emitirMudancaStatus disponível:', !!emitirMudancaStatus);
 
     useEffect(() => {
         if (!token?.id) return;
@@ -170,18 +246,6 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
         };
     }, [token?.id, setHistorico]);
 
-    const handleStatusUpdate = async (update: { id_servico: string; novo_status: string }) => {
-        const data = {
-            id_servico: update.id_servico,
-            status: update.novo_status
-        }
-
-        await axios.put(`${URLAPI}/servicos`, data);
-        
-    };
-
-    const { emitirMudancaStatus } = useStatusNotifications(handleStatusUpdate, token?.id);
-
     const handleOpenChat = (idServico: string) => {
         setIdServico(idServico);
         setIsChatOpen(true);
@@ -226,6 +290,11 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                 return false;
             }
 
+            // Filtro por categoria
+            if (filtroCategoria !== 'todos' && servico.categoria !== filtroCategoria) {
+                return false;
+            }
+
             // Filtro por data
             const dataServico = new Date(servico.data);
             const hoje = new Date();
@@ -234,34 +303,66 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
             switch (filtroData) {
                 case 'hoje':
                     return dataServico.toDateString() === hoje.toDateString();
+                case 'amanha':
+                    const amanha = new Date(hoje);
+                    amanha.setDate(hoje.getDate() + 1);
+                    return dataServico.toDateString() === amanha.toDateString();
                 case 'semana':
-                    const umaSemanaAtras = new Date(hoje);
-                    umaSemanaAtras.setDate(hoje.getDate() - 7);
-                    return dataServico >= umaSemanaAtras;
+                    const fimSemana = new Date(hoje);
+                    fimSemana.setDate(hoje.getDate() + 7);
+                    return dataServico >= hoje && dataServico <= fimSemana;
                 case 'mes':
-                    const umMesAtras = new Date(hoje);
-                    umMesAtras.setMonth(hoje.getMonth() - 1);
-                    return dataServico >= umMesAtras;
+                    const fimMes = new Date(hoje);
+                    fimMes.setMonth(hoje.getMonth() + 1);
+                    return dataServico >= hoje && dataServico <= fimMes;
                 case 'ano':
-                    const umAnoAtras = new Date(hoje);
-                    umAnoAtras.setFullYear(hoje.getFullYear() - 1);
-                    return dataServico >= umAnoAtras;
+                    const fimAno = new Date(hoje);
+                    fimAno.setFullYear(hoje.getFullYear() + 1);
+                    return dataServico >= hoje && dataServico <= fimAno;
                 default:
                     return true;
             }
         });
 
-        // Se não houver filtro de data ativo, ordena por data_submisao
-        if (filtroData === 'todos') {
-            return servicosFiltrados.sort((a, b) => {
-                const dataA = new Date(a.data_submisao).getTime();
-                const dataB = new Date(b.data_submisao).getTime();
-                return dataB - dataA; // Ordem decrescente (mais recente primeiro)
-            });
-        }
+        // Filtro por urgência
+        const servicosComUrgencia = servicosFiltrados.filter(servico => {
+            if (filtroUrgencia === 'todos') return true;
+            
+            const dataServico = new Date(servico.data);
+            const urgencia = calcularUrgencia(dataServico);
+            return urgencia === filtroUrgencia;
+        });
 
-        return servicosFiltrados;
-    }, [historicoServico, filtroStatus, filtroData]);
+        // Ordenação por urgência (prazo mais apertado primeiro)
+        return servicosComUrgencia.sort((a, b) => {
+            const dataA = new Date(a.data);
+            const dataB = new Date(b.data);
+            
+            // Primeiro ordena por data (mais próximo primeiro)
+            const diffA = calcularDiasRestantes(dataA);
+            const diffB = calcularDiasRestantes(dataB);
+            
+            if (diffA !== diffB) {
+                return diffA - diffB; // Menor diferença primeiro
+            }
+            
+            // Se a data for igual, ordena por status (pendente primeiro)
+            const prioridadeStatus: Record<string, number> = {
+                'pendente': 1,
+                'confirmar valor': 2,
+                'confirmado': 3,
+                'em andamento': 4,
+                'aguardando pagamento': 5,
+                'concluido': 6,
+                'cancelado': 7
+            };
+            
+            const prioridadeA = prioridadeStatus[a.status.toLowerCase()] || 8;
+            const prioridadeB = prioridadeStatus[b.status.toLowerCase()] || 8;
+            
+            return prioridadeA - prioridadeB;
+        });
+    }, [historicoServico, filtroStatus, filtroData, filtroUrgencia, filtroCategoria]);
 
     // Lógica de paginação
     const totalPaginas = Math.ceil(servicosFiltrados.length / itensPorPagina);
@@ -273,7 +374,36 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
     // Resetar página quando mudar os filtros
     useEffect(() => {
         setPaginaAtual(1);
-    }, [filtroStatus, filtroData]);
+    }, [filtroStatus, filtroData, filtroUrgencia, filtroCategoria]);
+
+    // Função para calcular a urgência de um serviço
+    const calcularUrgencia = (dataServico: Date): 'urgente' | 'proximo' | 'futuro' => {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        const amanha = new Date(hoje);
+        amanha.setDate(hoje.getDate() + 1);
+        
+        const proximaSemana = new Date(hoje);
+        proximaSemana.setDate(hoje.getDate() + 7);
+        
+        if (dataServico <= amanha) return 'urgente';
+        if (dataServico <= proximaSemana) return 'proximo';
+        return 'futuro';
+    };
+
+    // Função para calcular dias restantes
+    const calcularDiasRestantes = (dataServico: Date): number => {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const dataServicoLimpa = new Date(dataServico);
+        dataServicoLimpa.setHours(0, 0, 0, 0);
+        
+        const diffTime = dataServicoLimpa.getTime() - hoje.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return diffDays;
+    };
 
     if (isLoading) {
         return <Loading />;
@@ -283,7 +413,7 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
         <div className="max-w-6xl mx-auto">
             {/* Filtros */}
             <div className="mb-8 bg-white p-6 rounded-xl shadow-md">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Filtro de Status */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,7 +424,7 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                 <button
                                     key={status.value}
                                     onClick={() => setFiltroStatus(status.value)}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
                                         ${filtroStatus === status.value
                                             ? 'bg-[#AC5906] text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
@@ -315,12 +445,54 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                 <button
                                     key={data.value}
                                     onClick={() => setFiltroData(data.value)}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
                                         ${filtroData === data.value
                                             ? 'bg-[#AC5906] text-white'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                                 >
                                     {data.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filtro de Urgência */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Filtrar por Urgência
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            {urgenciaOptions.map((urgencia) => (
+                                <button
+                                    key={urgencia.value}
+                                    onClick={() => setFiltroUrgencia(urgencia.value)}
+                                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
+                                        ${filtroUrgencia === urgencia.value
+                                            ? 'bg-[#AC5906] text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                >
+                                    {urgencia.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filtro de Categoria */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Filtrar por Categoria
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            {categoriaOptions.map((categoria) => (
+                                <button
+                                    key={categoria.value}
+                                    onClick={() => setFiltroCategoria(categoria.value)}
+                                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
+                                        ${filtroCategoria === categoria.value
+                                            ? 'bg-[#AC5906] text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                >
+                                    {categoria.label}
                                 </button>
                             ))}
                         </div>
@@ -333,9 +505,52 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                 {servicosPaginados.length > 0 ? (
                     servicosPaginados.map((servico, index) => {
                         const statusConfig = getStatusConfig(servico.status);
+                        const dataServico = new Date(servico.data);
+                        const urgencia = calcularUrgencia(dataServico);
+                        const diasRestantes = calcularDiasRestantes(dataServico);
+
+                        // Configuração visual da urgência
+                        const urgenciaConfig = {
+                            urgente: { 
+                                color: '#EF4444', 
+                                bgColor: '#FEE2E2', 
+                                text: diasRestantes === 0 ? 'HOJE!' : 'AMANHÃ!',
+                                icon: '🔥'
+                            },
+                            proximo: { 
+                                color: '#F59E0B', 
+                                bgColor: '#FEF3C7', 
+                                text: `${diasRestantes} dias`,
+                                icon: '⚡'
+                            },
+                            futuro: { 
+                                color: '#10B981', 
+                                bgColor: '#D1FAE5', 
+                                text: `${diasRestantes} dias`,
+                                icon: '📅'
+                            }
+                        };
+
+                        const configUrgencia = urgenciaConfig[urgencia];
 
                         return (
-                            <div key={index} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <div key={index} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+                                {/* Indicador de Urgência */}
+                                {urgencia === 'urgente' && (
+                                    <div className="absolute top-4 right-4 z-10">
+                                        <div 
+                                            className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"
+                                            style={{
+                                                backgroundColor: configUrgencia.bgColor,
+                                                color: configUrgencia.color
+                                            }}
+                                        >
+                                            <span>{configUrgencia.icon}</span>
+                                            <span>{configUrgencia.text}</span>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Cabeçalho do Card */}
                                 <div className="p-6 border-b border-gray-100">
                                     <div className="flex items-center justify-between mb-4">
@@ -369,6 +584,16 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <span>{new Date(servico.data).toLocaleDateString()}</span>
+                                            {/* Indicador de urgência sutil */}
+                                            <span 
+                                                className="ml-2 px-2 py-1 rounded-full text-xs font-medium"
+                                                style={{
+                                                    backgroundColor: configUrgencia.bgColor,
+                                                    color: configUrgencia.color
+                                                }}
+                                            >
+                                                {configUrgencia.icon} {configUrgencia.text}
+                                            </span>
                                         </div>
                                         <div className="flex items-center text-gray-600">
                                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,6 +611,18 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                         >
                                             {statusConfig.text}
                                         </div>
+                                        
+                                        {/* Exibir valor para todos os status */}
+                                        <div className="flex items-center justify-between mt-3 p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-gray-600 font-medium">Valor:</span>
+                                            <span className="text-xl font-bold text-[#AC5906]">
+                                                {servico.valor !== undefined && servico.valor !== null ? new Intl.NumberFormat('pt-BR', {
+                                                    style: 'currency',
+                                                    currency: 'BRL'
+                                                }).format(servico.valor) : 'A combinar'}
+                                            </span>
+                                        </div>
+                                        
                                         {servico.status === "confirmar valor" && (
                                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                                 <div className="flex items-center justify-between mb-3">
@@ -399,7 +636,22 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <button
-                                                        onClick={() => emitirMudancaStatus(servico.id_servico, 'confirmado', servico.id_fornecedor)}
+                                                        onClick={() => {
+                                                            console.log('=== DEBUG ACEITAR VALOR ===');
+                                                            console.log('Serviço completo:', servico);
+                                                            console.log('ID do serviço:', servico.id_servico);
+                                                            console.log('ID do fornecedor:', servico.id_fornecedor);
+                                                            console.log('Status atual:', servico.status);
+                                                            console.log('Token disponível:', !!token);
+                                                            console.log('Token ID:', token?.id);
+                                                            
+                                                            if (!servico.id_servico || !servico.id_fornecedor) {
+                                                                console.error('Dados do serviço incompletos!');
+                                                                return;
+                                                            }
+                                                            
+                                                            emitirMudancaStatus(servico.id_servico, 'confirmado', servico.id_fornecedor);
+                                                        }}
                                                         className="bg-[#4CAF50] text-white py-2.5 rounded-lg font-medium hover:bg-[#3d8b40] transition-colors flex items-center justify-center"
                                                     >
                                                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +660,22 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                                         Aceitar Valor
                                                     </button>
                                                     <button
-                                                        onClick={() => emitirMudancaStatus(servico.id_servico, 'cancelado', servico.id_fornecedor)}
+                                                        onClick={() => {
+                                                            console.log('=== DEBUG RECUSAR VALOR ===');
+                                                            console.log('Serviço completo:', servico);
+                                                            console.log('ID do serviço:', servico.id_servico);
+                                                            console.log('ID do fornecedor:', servico.id_fornecedor);
+                                                            console.log('Status atual:', servico.status);
+                                                            console.log('Token disponível:', !!token);
+                                                            console.log('Token ID:', token?.id);
+                                                            
+                                                            if (!servico.id_servico || !servico.id_fornecedor) {
+                                                                console.error('Dados do serviço incompletos!');
+                                                                return;
+                                                            }
+                                                            
+                                                            emitirMudancaStatus(servico.id_servico, 'cancelado', servico.id_fornecedor);
+                                                        }}
                                                         className="bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center"
                                                     >
                                                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +861,7 @@ export const Agenda = ({ historicoServico, setHistorico,isLoading }: AgendaProps
                                             viewBox="0 0 20 20"
                                             xmlns="http://www.w3.org/2000/svg"
                                         >
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                         </svg>
                                     </button>
                                 ))}

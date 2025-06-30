@@ -17,10 +17,10 @@ interface Fornecedor {
     valor: string;
     imagemPerfil: string;
     imagemIlustrativa: string;
-    endereco: enderecoFornecedor;
-    imagemServicos: string[];
-    sobre:string;
-    categoria_servico: string[];
+    endereco?: enderecoFornecedor;
+    imagemServicos?: string[];
+    sobre?: string;
+    categoria_servico?: string[];
 }
 
 interface enderecoFornecedor {
@@ -42,13 +42,49 @@ export const Pagina_principal = ({ id }:PropsFornecedor) => {
     
     const pesquisarFornecedor = async () => {
         setLoading(true);
+        setError(null);
+        
         try{
+            console.log('🔍 Buscando fornecedor:', id);
             const response = await axios.get(`${URLAPI}/fornecedor/${id}`);
-            setFornecedor(response.data);
-            setLoading(false);
-        }catch (error:unknown) {
-            console.error('Erro ao buscar fornecedor:', error);
-            setError('Erro ao buscar fornecedor');
+            console.log('✅ Dados do fornecedor recebidos:', response.data);
+            
+            // Verificar se os dados estão completos
+            const dados = response.data;
+            if (!dados.nome || !dados.id_fornecedor) {
+                console.log('❌ Dados incompletos:', dados);
+                setError('Dados do fornecedor incompletos');
+                return;
+            }
+            
+            setFornecedor(dados);
+            console.log('✅ Fornecedor carregado com sucesso');
+            
+        }catch (error: any) {
+            console.error('❌ Erro detalhado ao buscar fornecedor:', error);
+            
+            if (error.response) {
+                // Erro da API
+                console.error('Status:', error.response.status);
+                console.error('Dados:', error.response.data);
+                
+                if (error.response.status === 404) {
+                    setError('Fornecedor não encontrado');
+                } else if (error.response.status === 500) {
+                    setError('Erro interno do servidor');
+                } else {
+                    setError(`Erro ${error.response.status}: ${error.response.data?.error || 'Erro desconhecido'}`);
+                }
+            } else if (error.request) {
+                // Erro de rede
+                console.error('Erro de rede:', error.request);
+                setError('Erro de conexão. Verifique sua internet.');
+            } else {
+                // Outro erro
+                console.error('Erro:', error.message);
+                setError('Erro ao buscar fornecedor');
+            }
+        } finally {
             setLoading(false);
         }
     }
@@ -66,15 +102,15 @@ export const Pagina_principal = ({ id }:PropsFornecedor) => {
             {fornecedor && (
                 <PerfilFornecedor
                     id={fornecedor.id_fornecedor}
-                    local={fornecedor.endereco.cidade}
+                    local={fornecedor.endereco?.cidade || 'Local não informado'}
                     nome={fornecedor.nome}
                     media_avaliacoes={fornecedor.media_avaliacoes}
                     descricao={fornecedor.descricao}
                     imagemPerfil={fornecedor.imagemPerfil ?? ""}
                     valor={fornecedor.valor}
-                    imagensServicos={fornecedor.imagemServicos}
-                    categoria_servico={fornecedor.categoria_servico}
-                    sobre={fornecedor.sobre}
+                    imagensServicos={fornecedor.imagemServicos || []}
+                    categoria_servico={fornecedor.categoria_servico || []}
+                    sobre={fornecedor.sobre || ''}
                 />
             )}
         </>

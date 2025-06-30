@@ -1,11 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Pagina_inicial } from "./Pagina_inicial";
 import { DadosPessoais } from "./DadosPessoais";
 import { HistoricoServico } from "../../types/historicoServico";
 import { URLAPI } from "../../constants/ApiUrl";
 import { Agenda } from "./Agenda";
-
 
 interface PerfilProps {
     id: string | undefined
@@ -26,6 +26,7 @@ export const PerfilUsuario = ({ id }: PerfilProps) => {
 
     const [mudarPagina, setMudarPagina] = useState(1);
     const [itemSelecionado, setItemSelecionado] = useState(1);
+    const navigate = useNavigate();
 
     const [usuario, setUsuario] = useState<typeUsuario | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +68,10 @@ export const PerfilUsuario = ({ id }: PerfilProps) => {
         setItemSelecionado(pagina);
     };
 
+    const handleMeusServicos = () => {
+        navigate('/meus-servicos');
+    };
+
     return (
         <div className="bg-white min-h-screen flex font-sans">
             {/* Menu lateral */}
@@ -90,6 +95,12 @@ export const PerfilUsuario = ({ id }: PerfilProps) => {
                             }`}
                     >
                         Serviços Agendados
+                    </li>
+                    <li
+                        onClick={handleMeusServicos}
+                        className="cursor-pointer transition-colors text-gray-600 hover:text-orange-500"
+                    >
+                        Meus Serviços Contratados
                     </li>
                     <li
                         onClick={() => handleItemClick(2)}

@@ -63,13 +63,12 @@ const Header = () => {
     }
   };
 
-
   useEffect(() => {
     setIsLoggedIn(isUserLoggedIn());
 
     if (token?.id && !imagem) {
       if (token.role === 'Fornecedor') {
-        procurarImagemPerfilFornecedor()
+        procurarImagesmPerfilFornecedor()
       } else {
         procurarImagemPerfil();
       }
@@ -113,6 +112,10 @@ const Header = () => {
     navigate('/leiloes');
   }
 
+  const navegarMeusServicos = () => {
+    navigate('/meus-servicos');
+  }
+
   const toggleModal = () => {
     setIsModalOpen((prev) => !prev); // alterna entre true/false
   };
@@ -129,6 +132,9 @@ const Header = () => {
             <a onClick={navegarSobreNos} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Sobre nós</a>
             <a onClick={navegarAjuda} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Ajuda</a>
             <a onClick={navegarLeiloes} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Leilões</a>
+            {isLoggedIn && token?.role !== 'Fornecedor' && (
+              <a onClick={navegarMeusServicos} className="cursor-pointer text-gray-700 hover:text-[#A75C00]">Meus Serviços</a>
+            )}
           </nav>
 
           {isLoggedIn ? (

@@ -24,6 +24,7 @@ import { LeilaoDetalhesScreen } from "./screens/LeilaoDetalhesScreen";
 import { CriarLeilaoScreen } from "./screens/CriarLeilaoScreen";
 import { MeusLeiloesScreen } from "./screens/MeusLeiloesScreen";
 import { LeiloesScreen } from "./screens/LeiloesScreen";
+import MeusServicos from "./components/perfilUsuario/MeusServicos";
 
 export const Router = () =>{
     return(
@@ -49,6 +50,7 @@ export const Router = () =>{
                 <Route path="/leilao/:id" element={<LeilaoDetalhesScreen />} />
                 <Route path="/criar-leilao" element={<CriarLeilaoScreen />} />
                 <Route path="/meus-leiloes" element={<MeusLeiloesScreen />} />
+                <Route path="/meus-servicos" element={<MeusServicos />} />
                 <Route path="*" element={<PaginaErro/>}/>
             </Routes>
     )

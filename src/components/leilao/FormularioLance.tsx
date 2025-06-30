@@ -107,14 +107,24 @@ export const FormularioLance = ({ idLeilao }: Props) => {
 
   return (
     <div className="mt-4 flex flex-col items-start gap-3">
+      <div className="w-full p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+        <h3 className="font-semibold text-green-800 mb-2">Como funciona o leilão:</h3>
+        <ul className="text-sm text-green-700 space-y-1">
+          <li>• O usuário define um valor máximo que está disposto a pagar</li>
+          <li>• Os fornecedores competem oferecendo valores MENORES</li>
+          <li>• Quem oferecer o menor valor ganha o serviço</li>
+          <li>• Seu lance deve ser menor que o valor máximo e menor que os lances existentes</li>
+        </ul>
+      </div>
+      
       <div className="w-full">
         <label htmlFor="valor-lance" className="block text-sm font-medium text-gray-700 mb-1">
-          Seu Lance (R$)
+          Seu Lance (R$) - Deve ser MENOR que o valor máximo
         </label>
         <input
           id="valor-lance"
           type="number"
-          placeholder="Digite seu lance"
+          placeholder="Digite seu lance (valor menor)"
           className="border border-gray-300 p-2 rounded w-full focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           value={valor}
           onChange={(e) => setValor(e.target.value)}
@@ -122,6 +132,9 @@ export const FormularioLance = ({ idLeilao }: Props) => {
           step="0.01"
           disabled={enviando}
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Dica: Ofereça um valor competitivo para aumentar suas chances de ganhar!
+        </p>
       </div>
       <button
         onClick={enviarLance}

@@ -7,6 +7,7 @@ import { AgendamentoType } from '../../types/agendamento';
 import { URLAPI } from '../../constants/ApiUrl';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'react-toastify';
+import { ConflitoModal } from './ConflitoModal';
 
 interface AgendamentoProps {
   idFornecedor: string;
@@ -17,6 +18,8 @@ export const Agendamento = ({ idFornecedor }: AgendamentoProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [categoriasServico, setCategoriasServico] = useState<string[] | null>(null)
+  const [showConflitoModal, setShowConflitoModal] = useState(false);
+  const [conflitos, setConflitos] = useState<any[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -130,6 +133,31 @@ export const Agendamento = ({ idFornecedor }: AgendamentoProps) => {
 
       const dataHora = new Date(`${formData.data}T${formData.horario}`);
 
+      // Verificar conflitos de horário antes de agendar
+      try {
+        const conflitosResponse = await axios.post(`${URLAPI}/servicos/verificar-conflitos`, {
+          fornecedorId: idFornecedor,
+          data: formData.data,
+          horario: dataHora.toISOString()
+        });
+
+        if (conflitosResponse.data.hasConflict) {
+          setConflitos(conflitosResponse.data.conflictingServices);
+          setShowConflitoModal(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch (conflitoError: any) {
+        if (conflitoError.response?.status === 409) {
+          setConflitos(conflitoError.response.data.conflictingServices || []);
+          setShowConflitoModal(true);
+          setIsLoading(false);
+          return;
+        }
+        // Se não for erro de conflito, continua com o agendamento
+        console.warn('Erro ao verificar conflitos:', conflitoError);
+      }
+
       const agendamentoData: AgendamentoType = {
         id_usuario: token?.id as string,
         id_fornecedor: idFornecedor,
@@ -164,9 +192,16 @@ export const Agendamento = ({ idFornecedor }: AgendamentoProps) => {
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao agendar serviço:', error);
-      toast.error('Erro ao agendar serviço. Tente novamente.');
+      
+      // Verificar se é erro de conflito
+      if (error.response?.status === 409) {
+        setConflitos(error.response.data.conflictingServices || []);
+        setShowConflitoModal(true);
+      } else {
+        toast.error('Erro ao agendar serviço. Tente novamente.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -288,6 +323,13 @@ export const Agendamento = ({ idFornecedor }: AgendamentoProps) => {
           </button>
         </form>
       </div>
+
+      {/* Modal de Conflitos */}
+      <ConflitoModal
+        isOpen={showConflitoModal}
+        onClose={() => setShowConflitoModal(false)}
+        conflitos={conflitos}
+      />
     </div>
   );
 };

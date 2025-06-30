@@ -21,7 +21,7 @@ export const useStatusNotifications = (
             reconnection: true,
             reconnectionAttempts: 5,
             reconnectionDelay: 1000
-        });
+        });sss
         
         socketRef.current = socket;
 
@@ -52,14 +52,25 @@ export const useStatusNotifications = (
         novo_status: string,
         id_fornecedor: string
     ) => {
-        if (!socketRef.current || !userId) return;
+        console.log('emitirMudancaStatus chamada com:', { id_servico, novo_status, id_fornecedor });
+        console.log('Socket disponível:', !!socketRef.current);
+        console.log('UserId disponível:', !!userId);
+        
+        if (!socketRef.current || !userId) {
+            console.error('Socket ou userId não disponível');
+            return;
+        }
 
-        socketRef.current.emit('mudanca_status', {
+        const data = {
             id_servico,
             novo_status,
             id_usuario: userId,
             id_fornecedor
-        });
+        };
+        
+        console.log('Emitindo evento mudanca_status com dados:', data);
+        socketRef.current.emit('mudanca_status', data);
+        console.log('Evento emitido com sucesso');
     }, [userId]);
 
     return { emitirMudancaStatus };
